@@ -114,6 +114,9 @@ func (c *Conn) CheckNamedValue(nv *driver.NamedValue) error {
 		return driver.ErrRemoveArgument
 	case TVP:
 		return nil
+	case MessageHandler:
+		c.outs.handleMsg = v
+		return driver.ErrRemoveArgument
 	default:
 		var err error
 		nv.Value, err = convertInputParameter(nv.Value)

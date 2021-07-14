@@ -26,6 +26,8 @@ import (
 //   log.Printf("return status = %d", rs)
 type ReturnStatus int32
 
+type MessageHandler = func(msg Error)
+
 var driverInstance = &Driver{processQueryText: true}
 var driverInstanceNoProcess = &Driver{processQueryText: false}
 
@@ -179,6 +181,7 @@ type Conn struct {
 type outputs struct {
 	params       map[string]interface{}
 	returnStatus *ReturnStatus
+	handleMsg    MessageHandler
 }
 
 // IsValid satisfies the driver.Validator interface.
@@ -659,6 +662,10 @@ loop:
 					if reader.outs.returnStatus != nil {
 						*reader.outs.returnStatus = token
 					}
+				case sqlMessage:
+					if reader.outs.handleMsg != nil {
+						reader.outs.handleMsg(Error(token))
+					}
 				}
 			}
 		} else {
@@ -770,6 +777,10 @@ func (rc *Rows) Next(dest []driver.Value) error {
 				case ReturnStatus:
 					if rc.reader.outs.returnStatus != nil {
 						*rc.reader.outs.returnStatus = tokdata
+					}
+				case sqlMessage:
+					if rc.reader.outs.handleMsg != nil {
+						rc.reader.outs.handleMsg(Error(tokdata))
 					}
 				}
 			}

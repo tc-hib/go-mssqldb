@@ -731,6 +731,7 @@ func processSingleResponse(sess *tdsSession, ch chan tokenStruct, outs outputs) 
 			if sess.logFlags&logErrors != 0 {
 				sess.log.Println(err.Message)
 			}
+			ch <- sqlMessage(err)
 		case tokenInfo:
 			info := parseInfo(sess.buf)
 			if sess.logFlags&logDebug != 0 {
@@ -739,6 +740,7 @@ func processSingleResponse(sess *tdsSession, ch chan tokenStruct, outs outputs) 
 			if sess.logFlags&logMessages != 0 {
 				sess.log.Println(info.Message)
 			}
+			ch <- sqlMessage(info)
 		case tokenReturnValue:
 			nv := parseReturnValue(sess.buf)
 			if len(nv.Name) > 0 {
@@ -804,6 +806,10 @@ func (t *tokenProcessor) iterateResponse() error {
 				case ReturnStatus:
 					if t.outs.returnStatus != nil {
 						*t.outs.returnStatus = token
+					}
+				case sqlMessage:
+					if t.outs.handleMsg != nil {
+						t.outs.handleMsg(Error(token))
 					}
 					/*case error:
 					if resultError == nil {

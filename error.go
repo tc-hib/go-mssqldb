@@ -22,6 +22,11 @@ type Error struct {
 	All []Error
 }
 
+// sqlMessage is an Error that does not implement error.
+// This is used to handle sql messages without
+// treating them as runtime errors.
+type sqlMessage Error
+
 func (e Error) Error() string {
 	return "mssql: " + e.Message
 }
