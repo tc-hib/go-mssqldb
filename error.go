@@ -27,11 +27,8 @@ type Error struct {
 	badConn bool
 }
 
-func (e Error) Unwrap() error {
-	if e.badConn {
-		return driver.ErrBadConn
-	}
-	return nil
+func (e Error) Is(err error) bool {
+	return e.badConn && err == driver.ErrBadConn
 }
 
 func (e Error) Error() string {
